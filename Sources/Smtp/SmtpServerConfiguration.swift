@@ -27,3 +27,15 @@ public struct SmtpServerConfiguration {
         self.helloMethod = helloMethod
     }
 }
+
+public extension SmtpServerConfiguration {
+    static var `default`: SmtpServerConfiguration {
+        print(Environment.get("SMTP_ADDRESS"))
+        
+        return SmtpServerConfiguration(
+            hostname: Environment.get("SMTP_ADDRESS") ?? "",
+            username: Environment.get("SMTP_USERNAME") ?? "",
+            password: Environment.get("SMTP_PASSWORD") ?? "",
+            secure: .ssl)
+    }
+}

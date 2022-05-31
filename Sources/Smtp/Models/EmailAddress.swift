@@ -7,3 +7,9 @@ public struct EmailAddress {
         self.name = name
     }
 }
+
+extension EmailAddress : ExpressibleByStringLiteral {
+    public init(stringLiteral email: String) {
+        self.init(address: email)
+    }
+}
