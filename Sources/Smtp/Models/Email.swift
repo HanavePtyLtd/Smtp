@@ -11,6 +11,7 @@ public class Email {
     public let isBodyHtml: Bool
     public let replyTo: EmailAddress?
     public let reference : String?
+    public let returnReceipt : EmailAddress?
     
     public var uuid : String = ""
     internal var attachments: [Attachment] = []
@@ -23,7 +24,8 @@ public class Email {
                 subject: String,
                 body: String,
                 isBodyHtml: Bool = false,
-                replyTo: EmailAddress? = nil
+                replyTo: EmailAddress? = nil,
+                returnReceipt: EmailAddress? = nil
     ) {
         self.from = from
         self.to = to
@@ -34,6 +36,7 @@ public class Email {
         self.isBodyHtml = isBodyHtml
         self.replyTo = replyTo
         self.reference = reference
+        self.returnReceipt = returnReceipt
     }
 
     public func addAttachment(_ attachment: Attachment) {
@@ -76,6 +79,10 @@ extension Email {
         if let reference = self.reference {
             out.writeString("In-Reply-To: \(reference)\r\n")
             out.writeString("References: \(reference)\r\n")
+        }
+        if let returnReceipt = self.returnReceipt {
+            out.writeString("Return-Receipt-To: \(self.formatMIME(emailAddress: returnReceipt))")
+            out.writeString("Disposition-Notification-To: \(self.formatMIME(emailAddress: returnReceipt))")
         }
 
         let boundary = self.boundary()
