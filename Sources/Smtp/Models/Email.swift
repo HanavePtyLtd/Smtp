@@ -81,8 +81,8 @@ extension Email {
             out.writeString("References: \(reference)\r\n")
         }
         if let returnReceipt = self.returnReceipt {
-            out.writeString("Return-Receipt-To: \(self.formatMIME(emailAddress: returnReceipt))")
-            out.writeString("Disposition-Notification-To: \(self.formatMIME(emailAddress: returnReceipt))")
+            out.writeString("Return-Receipt-To: \(self.formatMIME(emailAddress: returnReceipt))\r\n")
+            out.writeString("Disposition-Notification-To: \(self.formatMIME(emailAddress: returnReceipt))\r\n")
         }
 
         let boundary = self.boundary()
