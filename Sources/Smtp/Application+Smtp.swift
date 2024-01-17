@@ -14,7 +14,10 @@ extension Application {
 
         public var configuration: SmtpServerConfiguration {
             get {
-                self.application.storage[ConfigurationKey.self] ?? .init()
+                if let config = self.application.storage[ConfigurationKey.self] {
+                    return config
+                }
+                fatalError("Can't use SMTP Without a configuration")
             }
             nonmutating set {
                 self.application.storage[ConfigurationKey.self] = newValue
