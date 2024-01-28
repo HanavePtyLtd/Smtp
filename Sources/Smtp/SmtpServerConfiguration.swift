@@ -30,9 +30,6 @@ public struct SmtpServerConfiguration {
 
 public extension SmtpServerConfiguration {
     static var `default`: SmtpServerConfiguration {
-       
-        print("SMTP_ADDRESS", Environment.get("SMTP_ADDRESS"))
-        print("SMTP_USERNAME", Environment.get("SMTP_USERNAME"))
         
         return SmtpServerConfiguration(
             hostname: Environment.get("SMTP_ADDRESS") ?? "",

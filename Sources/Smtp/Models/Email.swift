@@ -42,6 +42,11 @@ public class Email {
     public func addAttachment(_ attachment: Attachment) {
         self.attachments.append(attachment)
     }
+    public func addAttachments(_ attachments: [Attachment]) {
+        for attachment in attachments {
+            self.attachments.append(attachment)
+        }
+    }
 }
 
 extension Email {
