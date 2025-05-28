@@ -54,7 +54,6 @@ extension Email {
         let date = Date()
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US")
-
         dateFormatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss Z"
         let dateFormatted = dateFormatter.string(from: date)
 
@@ -67,7 +66,7 @@ extension Email {
             let ccAddresses = cc.map { self.formatMIME(emailAddress: $0) }.joined(separator: ", ")
             out.writeString("Cc: \(ccAddresses)\r\n")
         }
-        
+
 //        if let bcc = self.bcc {
 //            let bccAddresses = bcc.map { self.formatMIME(emailAddress: $0) }.joined(separator: ", ")
 //            out.writeString("Bcc: \(bccAddresses)\r\n")
@@ -91,42 +90,61 @@ extension Email {
         }
 
         let boundary = self.boundary()
-        if self.attachments.count > 0 {
-            out.writeString("Content-type: multipart/mixed; boundary=\"\(boundary)\"\r\n")
-            out.writeString("Mime-Version: 1.0\r\n\r\n")
-        } else if self.isBodyHtml {
-            out.writeString("Content-Type: text/html; charset=\"UTF-8\"\r\n")
-            out.writeString("Mime-Version: 1.0\r\n\r\n")
-        } else {
-            out.writeString("Content-Type: text/plain; charset=\"UTF-8\"\r\n")
-            out.writeString("Mime-Version: 1.0\r\n\r\n")
-        }
+        let altBoundary = "alt" + boundary
 
         if self.attachments.count > 0 {
+            // multipart/mixed with nested multipart/alternative
+            out.writeString("Content-Type: multipart/mixed; boundary=\"\(boundary)\"\r\n")
+            out.writeString("Mime-Version: 1.0\r\n\r\n")
 
+            out.writeString("--\(boundary)\r\n")
+            out.writeString("Content-Type: multipart/alternative; boundary=\"\(altBoundary)\"\r\n\r\n")
+
+            // plain text fallback
+            out.writeString("--\(altBoundary)\r\n")
+            out.writeString("Content-Type: text/plain; charset=\"UTF-8\"\r\n\r\n")
+            out.writeString(self.body.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression, range: nil) + "\r\n")
+
+            // html version
             if self.isBodyHtml {
-                out.writeString("--\(boundary)\r\n")
+                out.writeString("--\(altBoundary)\r\n")
                 out.writeString("Content-Type: text/html; charset=\"UTF-8\"\r\n\r\n")
                 out.writeString("\(self.body)\r\n")
-                out.writeString("--\(boundary)\r\n")
-            } else {
-                out.writeString("--\(boundary)\r\n\r\n")
-                out.writeString("\(self.body)\r\n")
-                out.writeString("--\(boundary)\r\n")
             }
 
+            out.writeString("--\(altBoundary)--\r\n")
+
+            // attachments
             for attachment in self.attachments {
-                out.writeString("Content-type: \(attachment.contentType)\r\n")
+                out.writeString("--\(boundary)\r\n")
+                out.writeString("Content-Type: \(attachment.contentType)\r\n")
                 out.writeString("Content-Transfer-Encoding: base64\r\n")
                 out.writeString("Content-Disposition: attachment; filename=\"\(attachment.name)\"\r\n\r\n")
                 out.writeString("\(attachment.data.base64EncodedString())\r\n")
-                out.writeString("--\(boundary)\r\n")
             }
 
+            out.writeString("--\(boundary)--\r\n")
+        } else if self.isBodyHtml {
+            // multipart/alternative without attachments
+            out.writeString("Content-Type: multipart/alternative; boundary=\"\(altBoundary)\"\r\n")
+            out.writeString("Mime-Version: 1.0\r\n\r\n")
+
+            // plain text fallback
+            out.writeString("--\(altBoundary)\r\n")
+            out.writeString("Content-Type: text/plain; charset=\"UTF-8\"\r\n\r\n")
+            out.writeString(self.body.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression, range: nil) + "\r\n")
+
+            // html version
+            out.writeString("--\(altBoundary)\r\n")
+            out.writeString("Content-Type: text/html; charset=\"UTF-8\"\r\n\r\n")
+            out.writeString("\(self.body)\r\n")
+            out.writeString("--\(altBoundary)--\r\n")
         } else {
+            // plain text only
+            out.writeString("Content-Type: text/plain; charset=\"UTF-8\"\r\n")
+            out.writeString("Mime-Version: 1.0\r\n\r\n")
             out.writeString(self.body)
         }
-
         out.writeString("\r\n.")
     }
 
