@@ -102,13 +102,19 @@ extension Email {
 
             // plain text fallback
             out.writeString("--\(altBoundary)\r\n")
-            out.writeString("Content-Type: text/plain; charset=\"UTF-8\"\r\n\r\n")
-            out.writeString(self.body.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression, range: nil) + "\r\n")
-
+            out.writeString("Content-Type: text/plain; charset=\"UTF-8\"\r\n")
+            out.writeString("Content-Transfer-Encoding: 7bit\r\n\r\n")
+            let plainText = self.body.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+            if plainText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                out.writeString("No content available.\r\n")
+            } else {
+                out.writeString(plainText + "\r\n")
+            }
             // html version
             if self.isBodyHtml {
                 out.writeString("--\(altBoundary)\r\n")
-                out.writeString("Content-Type: text/html; charset=\"UTF-8\"\r\n\r\n")
+                out.writeString("Content-Type: text/html; charset=\"UTF-8\"\r\n")
+                out.writeString("Content-Transfer-Encoding: 7bit\r\n\r\n")
                 out.writeString("\(self.body)\r\n")
             }
 
@@ -126,17 +132,24 @@ extension Email {
             out.writeString("--\(boundary)--\r\n")
         } else if self.isBodyHtml {
             // multipart/alternative without attachments
+            out.writeString("This is a multi-part message in MIME format.\r\n")
             out.writeString("Content-Type: multipart/alternative; boundary=\"\(altBoundary)\"\r\n")
             out.writeString("Mime-Version: 1.0\r\n\r\n")
 
             // plain text fallback
             out.writeString("--\(altBoundary)\r\n")
-            out.writeString("Content-Type: text/plain; charset=\"UTF-8\"\r\n\r\n")
-            out.writeString(self.body.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression, range: nil) + "\r\n")
-
+            out.writeString("Content-Type: text/plain; charset=\"UTF-8\"\r\n")
+            out.writeString("Content-Transfer-Encoding: 7bit\r\n\r\n")
+            let plainText = self.body.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+            if plainText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                out.writeString("No content available.\r\n")
+            } else {
+                out.writeString(plainText + "\r\n")
+            }
             // html version
             out.writeString("--\(altBoundary)\r\n")
-            out.writeString("Content-Type: text/html; charset=\"UTF-8\"\r\n\r\n")
+            out.writeString("Content-Type: text/html; charset=\"UTF-8\"\r\n")
+            out.writeString("Content-Transfer-Encoding: 7bit\r\n\r\n")
             out.writeString("\(self.body)\r\n")
             out.writeString("--\(altBoundary)--\r\n")
         } else {
@@ -145,7 +158,7 @@ extension Email {
             out.writeString("Mime-Version: 1.0\r\n\r\n")
             out.writeString(self.body)
         }
-        out.writeString("\r\n.")
+//        out.writeString("\r\n.")
     }
 
     private func boundary() -> String {
